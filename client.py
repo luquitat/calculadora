@@ -20,6 +20,7 @@ class GUI:
         self.id = str(random.randint(1, 50000))
         self.stop_threads = False
 
+
         self.Window = tk.Tk()
         self.Window.geometry('250x300')
         self.Window.title('Calculadora')
@@ -96,7 +97,8 @@ class GUI:
                                      command=lambda: self._evento_click('+'))
         self.botonMas.grid(row=4, column=3, sticky='NSWE')
 
-        self.botonBorrar = ttk.Button(self.Window, text='C', command=self._evento_borrar)
+        self.botonBorrar = ttk.Button(self.Window, text='C', cursor='hand2',
+                                      command=self._evento_borrar)
         self.botonBorrar.grid(row=5, column=0, sticky='NSWE')
         self.botonCero = ttk.Button(self.Window, text='0', cursor='hand2',
                                      command=lambda: self._evento_click('0'))
@@ -107,6 +109,19 @@ class GUI:
         self.botonIgual = ttk.Button(self.Window, text='=', cursor='hand2',
                                      command=self._evento_calcular)
         self.botonIgual.grid(row=5, column=3, sticky='NSWE')
+
+        self.botonC1 = ttk.Button(self.Window, text='C1', cursor='hand2',
+                                    command=lambda: self._evento_click('1+2+3+4+5+6+7+8+9+10'))
+        self.botonC1.grid(row=6, column=0, sticky='NSWE')
+        self.botonC2 = ttk.Button(self.Window, text='C2', cursor='hand2',
+                                    command=lambda: self._evento_click('1*2+3^4-5*6+7/8+9/10'))
+        self.botonC2.grid(row=6, column=1, sticky='NSWE')
+        self.botonC3 = ttk.Button(self.Window, text='C3', cursor='hand2',
+                                     command=lambda: self._evento_click('1*(2+3^4)-5*(6+7)/(8+9/10)'))
+        self.botonC3.grid(row=6, column=2, sticky='NSWE')
+        self.botonC4 = ttk.Button(self.Window, text='C4', cursor='hand2',
+                                     command=lambda: self._evento_click('1*(2+3^4)-5*((6+7)/(8+9/10))'))
+        self.botonC4.grid(row=6, column=3, sticky='NSWE')
 
     def cerrar(self):
         self.stop_threads = True
@@ -122,8 +137,6 @@ class GUI:
 
     def _evento_calcular(self):
         aux = self.expresion.replace('^', '**')
-        # resultado = str(eval(aux))
-        # self.expresion = ''
         self.enviar(aux)
 
     def conectar(self):
@@ -132,9 +145,6 @@ class GUI:
                                         socket.SOCK_STREAM)
             self.client.connect(DIRECCION)
 
-            # msg = self.id
-            # self.client.send(msg.encode(CHARSET))
-            # Iniciamos el thread
             rcv = threading.Thread(target=self.recibir, args=(self.stop_threads, ))
             rcv.start()
             self.Window.mainloop()
@@ -143,6 +153,7 @@ class GUI:
 
     def enviar(self, aux):
         msg = aux
+        print(msg)
         self.client.send(msg.encode(CHARSET))
 
     # Funcion que recibe el mensaje
@@ -154,8 +165,6 @@ class GUI:
                 self.expresion = message
                 self.entradaTexto.set(self.expresion)
                 print(message)
-                if stop():
-                    break
             except:
                 print("Oh no! Algo anduvo mal")
                 self.client.close()
