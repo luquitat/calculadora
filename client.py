@@ -18,11 +18,13 @@ class GUI:
     def __init__(self):
 
         self.id = str(random.randint(1, 50000))
+        self.stop_threads = False
 
         self.Window = tk.Tk()
         self.Window.geometry('250x300')
         self.Window.title('Calculadora')
 
+        self.Window.protocol("WM_DELETE_WINDOW", self.cerrar)
         self.Window.rowconfigure(0, weight=7)
         self.Window.rowconfigure(1, weight=3)
         self.Window.rowconfigure(2, weight=3)
@@ -106,6 +108,10 @@ class GUI:
                                      command=self._evento_calcular)
         self.botonIgual.grid(row=5, column=3, sticky='NSWE')
 
+    def cerrar(self):
+        self.stop_threads = True
+        self.Window.destroy()
+
     def _evento_borrar(self):
         self.expresion = ''
         self.entradaTexto.set(self.expresion)
@@ -116,87 +122,44 @@ class GUI:
 
     def _evento_calcular(self):
         aux = self.expresion.replace('^', '**')
-        resultado = str(eval(aux))
-        self.expresion = ''
-        self.entradaTexto.set(resultado)
+        # resultado = str(eval(aux))
+        # self.expresion = ''
+        self.enviar(aux)
 
     def conectar(self):
-        self.Window.mainloop()
-        # try:
-        #     self.client = socket.socket(socket.AF_INET,
-        #                                 socket.SOCK_STREAM)
-        #     self.client.connect(DIRECCION)
-        #     msg = str(self.id)
-        #     self.client.send(msg.encode(CHARSET))
-        #     # Iniciamos el thread
-        #     rcv = threading.Thread(target=self.recibir)
-        #     rcv.start()
-        #     self.Window.mainloop()
-        # except:
-        #     print("No se encuentra cona conexión con el servidor")
+        try:
+            self.client = socket.socket(socket.AF_INET,
+                                        socket.SOCK_STREAM)
+            self.client.connect(DIRECCION)
 
-    def enviar(self):
-        msg = self.expresion
-        while True:
-            self.client.send(msg.encode(CHARSET))
-            break
+            # msg = self.id
+            # self.client.send(msg.encode(CHARSET))
+            # Iniciamos el thread
+            rcv = threading.Thread(target=self.recibir, args=(self.stop_threads, ))
+            rcv.start()
+            self.Window.mainloop()
+        except:
+            print("No se encuentra la conexión con el servidor")
 
-    def pantallaPrincipal(self, name):
-        self.client = socket.socket(socket.AF_INET,
-                                    socket.SOCK_STREAM)
-        self.client.connect(DIRECCION)
-        msg = "identificarme " + name
+    def enviar(self, aux):
+        msg = aux
         self.client.send(msg.encode(CHARSET))
-        # Iniciamos el thread
-        rcv = threading.Thread(target=self.recibir)
-        rcv.start()
-
-    # Layout del la pantalla principal
-
-    # Función del boton de enviar mensaje
-    def sendButton(self, msg):
-        self.boxComandos.config(state=DISABLED)
-        self.msg = msg
-        self.inputComandos.delete(0, END)
-        snd = threading.Thread(target=self.enviarMensaje)
-        snd.start()
-
-    # Función del boton de salir
-    def salir(self):
-        self.Window.destroy()
-        self.client.close()
-        sys.exit()
 
     # Funcion que recibe el mensaje
-    def recibir(self):
+    def recibir(self, stop):
         while True:
             try:
                 message = self.client.recv(1024).decode(CHARSET)
+                # agrego mensaje en el box
+                self.expresion = message
+                self.entradaTexto.set(self.expresion)
                 print(message)
-                # Magia pura
-                if message == 'ID':
-                    self.client.send(self.id.encode(CHARSET))
-                else:
-                    # agrego mensaje en el box
-                    print(message)
+                if stop():
+                    break
             except:
                 print("Oh no! Algo anduvo mal")
                 self.client.close()
                 break
-
-    def enviarMensaje(self):
-        # self.boxComandos.config(state=DISABLED)
-        self.boxComandos.config(state=NORMAL)
-        self.boxComandos.insert(END,
-                                f"{self.name}: {self.msg}\n")
-
-        self.boxComandos.config(state=DISABLED)
-        self.boxComandos.see(END)
-        while True:
-            # message = (f"{self.name}: {self.msg}")
-
-            self.client.send(self.msg.encode(CHARSET))
-            break
 
 
 g = GUI()

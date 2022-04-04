@@ -22,12 +22,16 @@ def iniciarServidor():
     print("Esperando conexiones")
     while True:
         cliente, direccionCliente = sock.accept()
-        start_new_thread(inicializarCliente, (cliente, direccionCliente))
+        start_new_thread(inicializarCliente, (cliente, ))
     sock.close()
 
 
 def ejecutar_calculo(expresion):
-    return eval(expresion)
+    try:
+        resultado = eval(expresion)
+    except:
+        resultado = "Error"
+    return resultado
 
 
 iniciarServidor()
