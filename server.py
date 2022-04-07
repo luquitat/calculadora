@@ -30,7 +30,7 @@ def ejecutar_calculo(expresion):
     try:
         resultado = eval(expresion)
     except:
-        resultado = "Error"
+        resultado = ""
     return resultado
 
 
